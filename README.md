@@ -1,0 +1,94 @@
+# InterviewAI — AI Interview Coach & Simulator
+
+InterviewAI is a premium AI interview simulator for realistic job-interview practice. It supports role setup, resume and job-description context, adaptive AI questions, microphone transcription, answer evaluation, and detailed professional reports.
+
+## Features
+
+- Adaptive HR, technical, behavioral, and mixed interviews
+- English and Arabic-ready interview flows
+- Resume and job-description analysis endpoints
+- Live browser transcription with speech metric estimates
+- Optional camera preview and privacy-aware body-language abstraction
+- AI-generated answer evaluations and final reports
+- Authenticated dashboard, interview history, reports, practice mode, question bank, resume analyzer, and settings
+
+## Stack
+
+- Next.js 15 App Router, React, TypeScript
+- Tailwind CSS with shadcn/ui-style primitives
+- Clerk authentication
+- Prisma ORM with PostgreSQL
+- Zod, React Hook Form, Zustand
+- Framer Motion-ready UI architecture, Lucide React icons, Recharts
+- Server-side AI route handlers
+
+## Local Installation
+
+```bash
+npm install
+cp .env.example .env
+```
+
+Fill in `.env` with your own values. For local demo mode, the app falls back to a demo user when Clerk keys are absent, but production should use Clerk.
+
+## Environment Variables
+
+```bash
+DATABASE_URL=
+AI_API_KEY=
+AI_MODEL=
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
+NEXT_PUBLIC_APP_URL=
+NEXT_PUBLIC_ENABLE_BODY_ANALYSIS=
+NEXT_PUBLIC_ENABLE_SPEECH_RECOGNITION=
+```
+
+`AI_API_KEY` is only read on the server. If it is missing, API routes return realistic demo/fallback responses.
+
+## Prisma Setup
+
+```bash
+npm run prisma:generate
+npm run prisma:migrate
+npm run prisma:seed
+```
+
+Use Vercel Postgres, Neon, Supabase Postgres, or any Vercel-compatible PostgreSQL provider. Set `DATABASE_URL` to the pooled/serverless-safe connection string when available.
+
+## Run Locally
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+## Deploy to Vercel
+
+1. Push the repository to GitHub.
+2. Create a Vercel project from the repository.
+3. Add all environment variables in Vercel Project Settings.
+4. Provision PostgreSQL and run Prisma migrations.
+5. Deploy with the default Next.js build command.
+
+No custom Express server is used. All backend work runs through App Router route handlers and server components.
+
+## Privacy and Security Notes
+
+- API keys are never exposed to frontend JavaScript.
+- Authenticated API routes verify the current user and interview ownership.
+- Camera/video recording is not stored by default.
+- The UI asks for explicit recording consent during setup.
+- Camera analysis is designed to be local/browser-based where supported.
+- AI route handlers include a rate-limit abstraction placeholder.
+
+## Known Limitations
+
+- Web Speech API support varies by browser.
+- Browser speech transcription accuracy is estimated and can contain errors.
+- Camera and body-language metrics are experimental.
+- AI feedback is coaching guidance, not a hiring decision.
+- PDF/DOCX resume extraction is stubbed for MVP; connect Vercel Blob, UploadThing, or Supabase Storage with a parser in production.

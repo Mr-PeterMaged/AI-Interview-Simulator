@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ExperienceLevel {
+  JUNIOR
+  MID
+  SENIOR
+}
+
+enum InterviewType {
+  HR
+  TECHNICAL
+  BEHAVIORAL
+  MIXED
+}
+
+enum InterviewLanguage {
+  ENGLISH
+  ARABIC
+}
+
+enum InterviewerPersonality {
+  FRIENDLY_RECRUITER
+  PROFESSIONAL_HR
+  SENIOR_ENGINEER
+  STRICT_INTERVIEWER
+  NEUTRAL_INTERVIEWER
+}
+
+enum InterviewStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id          String      @id
+  name        String?
+  email       String      @unique
+  image       String?
+  interviews  Interview[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Interview {
+  id                       String                   @id @default(cuid())
+  userId                   String
+  user                     User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title                    String
+  jobTitle                 String
+  industry                 String
+  experienceLevel          ExperienceLevel
+  interviewType            InterviewType
+  interviewLanguage        InterviewLanguage
+  interviewerPersonality   InterviewerPersonality
+  durationMinutes          Int
+  status                   InterviewStatus          @default(DRAFT)
+  jobDescription           String?
+  resumeText               String?
+  startedAt                DateTime?
+  completedAt              DateTime?
+  questions                InterviewQuestion[]
+  answers                  InterviewAnswer[]
+  report                   InterviewReport?
+  resumeAnalysis           ResumeAnalysis?
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+model InterviewQuestion {
+  id              String            @id @default(cuid())
+  interviewId     String
+  interview       Interview         @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  questionText    String
+  questionType    String
+  order           Int
+  generatedReason String?
+  answers         InterviewAnswer[]
+  createdAt       DateTime          @default(now())
+
+  @@index([interviewId, order])
+}
+
+model InterviewAnswer {
+  id               String               @id @default(cuid())
+  interviewId      String
+  interview        Interview            @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  questionId       String
+  question         InterviewQuestion    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  transcript       String
+  durationSeconds  Int
+  wordCount        Int
+  wordsPerMinute   Int
+  fillerWordCount  Int
+  longPauseCount   Int
+  evaluation       AnswerEvaluation?
+  bodyMetric       BodyLanguageMetric?
+  createdAt        DateTime             @default(now())
+
+  @@index([interviewId, createdAt])
+}
+
+model AnswerEvaluation {
+  id                       String          @id @default(cuid())
+  answerId                 String          @unique
+  answer                   InterviewAnswer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  relevanceScore           Int
+  clarityScore             Int
+  technicalAccuracyScore   Int
+  confidenceScore          Int
+  communicationScore       Int
+  structureScore           Int
+  evidenceScore            Int
+  concisenessScore         Int
+  overallScore             Int
+  strengths                Json
+  weaknesses               Json
+  suggestions              Json
+  improvedAnswer           String
+  starAnalysis             Json
+  createdAt                DateTime        @default(now())
+}
+
+model InterviewReport {
+  id                       String     @id @default(cuid())
+  interviewId              String     @unique
+  interview                Interview  @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  overallScore             Int
+  communicationScore       Int
+  technicalKnowledgeScore  Int
+  confidenceScore          Int
+  answerStructureScore     Int
+  relevanceScore           Int
+  readinessLevel           String
+  strongestAnswer          Json
+  weakestAnswer            Json
+  keyImprovements          Json
+  finalFeedback            String
+  practicePlan             Json
+  createdAt                DateTime   @default(now())
+}
+
+model ResumeAnalysis {
+  id                 String     @id @default(cuid())
+  interviewId        String?    @unique
+  interview          Interview? @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  extractedSkills    Json
+  projects           Json
+  experienceSummary  String
+  strengths          Json
+  suggestedTopics    Json
+  createdAt          DateTime   @default(now())
+}
+
+model BodyLanguageMetric {
+  id                     String          @id @default(cuid())
+  answerId               String          @unique
+  answer                 InterviewAnswer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  faceDetectedPercentage Int
+  lookingAwayPercentage  Int
+  postureScore           Int
+  headStabilityScore     Int
+  gestureScore           Int
+  movementScore          Int
+  notes                  String?
+  createdAt              DateTime        @default(now())
+}
