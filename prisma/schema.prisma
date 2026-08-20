@@ -175,3 +175,9 @@ model BodyLanguageMetric {
   notes                  String?
   createdAt              DateTime        @default(now())
 }
+
+model SiteStat {
+  key       String   @id
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+}

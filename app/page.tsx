@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, BrainCircuit, CheckCircle2, FileText, Mic2, Sparkles, Video, type LucideIcon } from "lucide-react";
+import { ArrowRight, BarChart3, BrainCircuit, CheckCircle2, Eye, FileText, Mic2, Sparkles, Video, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedPanel } from "@/components/landing/animated-panel";
+import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 
 const features: [string, string, LucideIcon][] = [
   ["AI-Powered Interviews", "Role-specific questions for your target job, seniority, and industry.", BrainCircuit],
@@ -17,7 +20,18 @@ const features: [string, string, LucideIcon][] = [
 
 const personalities = ["Friendly Recruiter", "Professional HR", "Senior Engineer", "Strict Interviewer", "Neutral Interviewer"];
 
-export default function LandingPage() {
+async function getAndIncrementVisitCount() {
+  const stat = await prisma.siteStat.upsert({
+    where: { key: "landing_page_views" },
+    create: { key: "landing_page_views", count: 1 },
+    update: { count: { increment: 1 } }
+  });
+  return stat.count;
+}
+
+export default async function LandingPage() {
+  const visitCount = await getAndIncrementVisitCount();
+
   return (
     <div className="relative overflow-hidden">
       <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
@@ -37,9 +51,15 @@ export default function LandingPage() {
 
       <section className="mx-auto grid min-h-[calc(100vh-88px)] max-w-7xl items-center gap-12 px-6 pb-20 pt-8 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="relative z-10">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-md border bg-slate-950/50 px-3 py-2 text-xs text-cyan-100">
-            <Mic2 className="h-4 w-4" />
-            Realistic AI interviews with live transcripts
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-md border bg-slate-950/50 px-3 py-2 text-xs text-cyan-100">
+              <Mic2 className="h-4 w-4" />
+              Realistic AI interviews with live transcripts
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-md border bg-slate-950/50 px-3 py-2 text-xs text-cyan-100">
+              <Eye className="h-4 w-4" />
+              {visitCount.toLocaleString()} visits
+            </div>
           </div>
           <h1 className="max-w-3xl text-5xl font-semibold tracking-normal text-white sm:text-6xl lg:text-7xl">
             MASTER YOUR NEXT INTERVIEW
