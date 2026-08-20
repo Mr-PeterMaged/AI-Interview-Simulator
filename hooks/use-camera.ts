@@ -7,6 +7,7 @@ export type CameraStatus = "idle" | "requesting" | "ready" | "denied" | "unsuppo
 export function useCamera(enabled: boolean) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const enabledRef = useRef(enabled);
   const [status, setStatus] = useState<CameraStatus>("idle");
 
   const stopCamera = useCallback(() => {
@@ -23,15 +24,20 @@ export function useCamera(enabled: boolean) {
     setStatus("requesting");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      if (!enabledRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
       streamRef.current = stream;
       if (videoRef.current) videoRef.current.srcObject = stream;
       setStatus("ready");
     } catch {
-      setStatus("denied");
+      if (enabledRef.current) setStatus("denied");
     }
   }, []);
 
   useEffect(() => {
+    enabledRef.current = enabled;
     if (enabled) void startCamera();
     else stopCamera();
     return stopCamera;

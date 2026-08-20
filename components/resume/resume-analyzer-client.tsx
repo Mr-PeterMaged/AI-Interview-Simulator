@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/page-header";
 import { ScoreRing } from "@/components/shared/score-ring";
+import { ErrorState } from "@/components/shared/error-state";
 
 type Analysis = {
   extractedSkills: string[];
@@ -23,26 +24,41 @@ export function ResumeAnalyzerClient() {
   const [resumeText, setResumeText] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function upload(file?: File) {
     if (!file) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await fetch("/api/upload", { method: "POST", body: formData });
-    const data = await response.json();
-    if (data.resumeText) setResumeText(data.resumeText);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Upload failed");
+      if (data.resumeText) setResumeText(data.resumeText);
+      else if (data.message) setError(data.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    }
   }
 
   async function analyze() {
     setLoading(true);
-    const response = await fetch("/api/ai/analyze-resume", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resumeText })
-    });
-    const data = await response.json();
-    setAnalysis(data.analysis);
-    setLoading(false);
+    setError(null);
+    try {
+      const response = await fetch("/api/ai/analyze-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resumeText })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to analyze resume");
+      setAnalysis(data.analysis);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to analyze resume");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -52,11 +68,12 @@ export function ResumeAnalyzerClient() {
         <Card className="glass">
           <CardHeader><CardTitle>Upload or paste resume</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <Input type="file" accept=".txt,.pdf,.doc,.docx" onChange={(event) => upload(event.target.files?.[0])} />
+            <Input type="file" accept=".txt,.pdf,.docx" onChange={(event) => upload(event.target.files?.[0])} />
             <Textarea value={resumeText} onChange={(event) => setResumeText(event.target.value)} className="min-h-80" placeholder="Paste resume text here." />
             <Button onClick={analyze} disabled={loading || resumeText.length < 20}>
               <Upload className="h-4 w-4" /> {loading ? "Analyzing..." : "Analyze resume"}
             </Button>
+            {error ? <ErrorState message={error} /> : null}
           </CardContent>
         </Card>
 

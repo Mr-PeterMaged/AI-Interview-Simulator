@@ -18,6 +18,16 @@ export async function GET() {
   }
 }
 
+export async function DELETE() {
+  try {
+    const userId = await requireUserId();
+    const result = await prisma.interview.deleteMany({ where: { userId } });
+    return NextResponse.json({ deletedCount: result.count });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to delete interview history" }, { status: 401 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const user = await ensureUser();

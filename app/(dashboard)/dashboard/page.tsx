@@ -14,16 +14,6 @@ import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-const chartData = [
-  { day: "Mon", score: 68, minutes: 15 },
-  { day: "Tue", score: 72, minutes: 22 },
-  { day: "Wed", score: 74, minutes: 18 },
-  { day: "Thu", score: 79, minutes: 30 },
-  { day: "Fri", score: 82, minutes: 28 },
-  { day: "Sat", score: 85, minutes: 36 },
-  { day: "Sun", score: 88, minutes: 24 }
-];
-
 export default async function DashboardPage() {
   const user = await ensureUser();
   const interviews = await prisma.interview.findMany({
@@ -36,6 +26,13 @@ export default async function DashboardPage() {
   const averageScore = reports.length ? Math.round(reports.reduce((sum, report) => sum + (report?.overallScore || 0), 0) / reports.length) : 74;
   const practiceMinutes = interviews.reduce((sum, interview) => sum + interview.durationMinutes, 0);
   const draft = interviews.find((interview) => interview.status === "DRAFT" || interview.status === "IN_PROGRESS");
+  const chartData = [...interviews]
+    .reverse()
+    .map((interview) => ({
+      day: formatDate(interview.createdAt),
+      score: interview.report?.overallScore || 0,
+      minutes: interview.durationMinutes
+    }));
 
   return (
     <div className="space-y-8">

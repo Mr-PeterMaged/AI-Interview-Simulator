@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { RotateCcw } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { assertInterviewOwner, requireUserId } from "@/lib/auth";
@@ -58,7 +58,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       }
     });
     if (!interview) notFound();
-    pageData = { interview, report: interview.report || demoReport, answers: interview.answers };
+    if (!interview.report) redirect(`/interviews/room/${id}`);
+    pageData = { interview, report: interview.report, answers: interview.answers };
   }
 
   const report = pageData.report as typeof demoReport;
