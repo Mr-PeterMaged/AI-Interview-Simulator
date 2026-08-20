@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Mic, MicOff, RefreshCw, Square, XCircle } from "lucide-react";
+import { Keyboard, Mic, MicOff, RefreshCw, Square, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { AnswerFeedbackCard } from "@/components/interview/answer-feedback-card"
 import { ErrorState } from "@/components/shared/error-state";
 import { useInterviewSession } from "@/hooks/use-interview-session";
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
+import { useCamera } from "@/hooks/use-camera";
 import { useBodyLanguage } from "@/hooks/use-body-language";
 import { analyzeSpeech } from "@/lib/speech-utils";
 
@@ -38,13 +39,15 @@ export function InterviewRoomClient({ interview }: InterviewRoomProps) {
   const session = useInterviewSession(interview);
   const language = interview.interviewLanguage === "ARABIC" ? "Arabic" : "English";
   const speech = useSpeechRecognition(language);
-  const [cameraEnabled] = useState(true);
+  const camera = useCamera(true);
+  const body = useBodyLanguage(camera.videoRef, camera.status === "ready");
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [duration, setDuration] = useState(0);
   const [manualTranscript, setManualTranscript] = useState("");
-  const transcript = speech.transcript || manualTranscript;
+  const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
+  const effectiveMode = speech.supported ? inputMode : "text";
+  const transcript = effectiveMode === "text" ? manualTranscript : speech.transcript || manualTranscript;
   const metrics = useMemo(() => analyzeSpeech({ transcript, durationSeconds: duration, language }), [duration, language, transcript]);
-  const body = useBodyLanguage(true, cameraEnabled);
   const spokenQuestionRef = useRef<string>("");
 
   useEffect(() => {
@@ -69,16 +72,25 @@ export function InterviewRoomClient({ interview }: InterviewRoomProps) {
     }
   }, [language, session.currentQuestion?.questionText]);
 
+  function switchInputMode(mode: "voice" | "text") {
+    if (mode === "text") speech.stop();
+    setInputMode(mode);
+  }
+
   function startAnswer() {
     setStartedAt(Date.now());
     setDuration(0);
     setManualTranscript("");
-    if (speech.supported) speech.start();
+    if (effectiveMode === "voice" && speech.supported) speech.start();
   }
 
   async function finishAnswer() {
     speech.stop();
-    await session.finishAnswer({ transcript: transcript || "No transcript captured.", durationSeconds: Math.max(1, duration) });
+    await session.finishAnswer({
+      transcript: transcript || "No transcript captured.",
+      durationSeconds: Math.max(1, duration),
+      bodyLanguage: body.metrics
+    });
     setStartedAt(null);
     setDuration(0);
     setManualTranscript("");
@@ -111,17 +123,22 @@ export function InterviewRoomClient({ interview }: InterviewRoomProps) {
 
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.25fr_0.95fr]">
         <aside className="space-y-4">
-          <CameraPreview enabled={cameraEnabled} />
+          <CameraPreview videoRef={camera.videoRef} status={camera.status} />
           <Card className="glass">
             <CardHeader><CardTitle className="text-base">Body language</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
-              {body.status === "unavailable" ? (
-                <p className="text-muted-foreground">Experimental/demo analysis unavailable on this device. Camera frames are never uploaded by default.</p>
+              {body.status === "idle" || body.status === "unavailable" ? (
+                <p className="text-muted-foreground">
+                  {camera.status === "ready" ? "Body-language analysis is unavailable on this device." : "Enable the camera to see live eye contact, posture, and expression estimates."}
+                </p>
+              ) : body.status === "loading-models" ? (
+                <p className="text-muted-foreground">Loading on-device face analysis…</p>
               ) : (
                 <>
                   <MetricLine label="Eye contact" value={body.metrics?.faceDetectedPercentage || 0} />
                   <MetricLine label="Posture" value={body.metrics?.postureScore || 0} />
                   <MetricLine label="Movement" value={body.metrics?.movementScore || 0} />
+                  {body.metrics?.notes ? <p className="text-xs text-muted-foreground">{body.metrics.notes}</p> : null}
                 </>
               )}
             </CardContent>
@@ -151,10 +168,33 @@ export function InterviewRoomClient({ interview }: InterviewRoomProps) {
         <aside className="space-y-4">
           {!speech.supported ? (
             <div className="rounded-lg border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
-              Web Speech API is not supported in this browser. You can type your answer manually.
+              Web Speech API is not supported in this browser. Type your answer below instead.
             </div>
           ) : null}
           {speech.error ? <div className="rounded-lg border border-rose-300/30 bg-rose-400/10 p-4 text-sm text-rose-100">{speech.error}</div> : null}
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-white">Answer input</h3>
+            {speech.supported ? (
+              <div className="flex overflow-hidden rounded-md border text-xs">
+                <button
+                  type="button"
+                  onClick={() => switchInputMode("voice")}
+                  disabled={Boolean(startedAt)}
+                  className={`flex items-center gap-1 px-3 py-1.5 ${effectiveMode === "voice" ? "bg-cyan-400/20 text-cyan-200" : "text-muted-foreground"}`}
+                >
+                  <Mic className="h-3 w-3" /> Voice
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchInputMode("text")}
+                  disabled={Boolean(startedAt)}
+                  className={`flex items-center gap-1 border-l px-3 py-1.5 ${effectiveMode === "text" ? "bg-cyan-400/20 text-cyan-200" : "text-muted-foreground"}`}
+                >
+                  <Keyboard className="h-3 w-3" /> Type
+                </button>
+              </div>
+            ) : null}
+          </div>
           <LiveTranscript transcript={transcript} onChange={setManualTranscript} />
           <SpeechMetricPanel metrics={metrics} />
           <AnswerFeedbackCard tips={metrics.recommendations} />
@@ -172,7 +212,9 @@ export function InterviewRoomClient({ interview }: InterviewRoomProps) {
               <XCircle className="h-4 w-4" /> End
             </Button>
           </div>
-          {speech.listening ? <p className="flex items-center gap-2 text-xs text-cyan-200"><MicOff className="h-3 w-3" /> Listening through browser speech recognition</p> : null}
+          {effectiveMode === "voice" && speech.listening ? (
+            <p className="flex items-center gap-2 text-xs text-cyan-200"><MicOff className="h-3 w-3" /> Listening through browser speech recognition</p>
+          ) : null}
         </aside>
       </div>
     </div>

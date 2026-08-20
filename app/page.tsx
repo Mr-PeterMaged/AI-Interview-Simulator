@@ -2,23 +2,17 @@ import Link from "next/link";
 import { ArrowRight, BarChart3, BrainCircuit, CheckCircle2, FileText, Mic2, Sparkles, Video, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { AnimatedPanel } from "@/components/landing/animated-panel";
 
 const features: [string, string, LucideIcon][] = [
   ["AI-Powered Interviews", "Role-specific questions for your target job, seniority, and industry.", BrainCircuit],
   ["Adaptive Follow-Up Questions", "The interviewer reacts to your answers, not a static script.", Sparkles],
   ["Instant Answer Feedback", "Get scoring for clarity, relevance, structure, evidence, and confidence.", CheckCircle2],
-  ["Resume-Based Interview Questions", "Upload a CV and rehearse questions grounded in your actual background.", FileText],
+  ["Resume-Based Interview Questions", "Upload a PDF, DOCX, or text CV — questions are grounded in your real experience.", FileText],
   ["Job Description Matching", "Practice against the requirements and keywords that matter most.", BarChart3],
-  ["Optional Camera Preview", "See yourself while you answer, with recording off by default.", Video],
+  ["Live Body Language Analysis", "On-device eye-contact, posture, and expression scoring. Camera frames never leave your browser.", Video],
   ["Detailed Performance Reports", "Radar charts, speech insights, strongest answers, and practice plans.", BarChart3],
   ["Track Your Progress", "Review historical sessions and watch readiness improve over time.", CheckCircle2]
-];
-
-const roadmapFeatures: [string, string][] = [
-  ["Real-Time Body Language Scoring", "Camera preview is live today; automated eye-contact and posture scoring from real computer-vision analysis is in development."],
-  ["PDF/DOCX Resume Parsing", "Plain-text resume upload works now; direct PDF and DOCX extraction is planned for a future release."]
 ];
 
 const personalities = ["Friendly Recruiter", "Professional HR", "Senior Engineer", "Strict Interviewer", "Neutral Interviewer"];
@@ -115,23 +109,6 @@ export default function LandingPage() {
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        <div className="mt-10">
-          <h3 className="text-lg font-semibold text-white">Coming next</h3>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {roadmapFeatures.map(([title, description]) => (
-              <Card key={title} className="glass border-dashed">
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">Roadmap</Badge>
-                    <h4 className="font-semibold text-white">{title}</h4>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </div>
       </section>
 

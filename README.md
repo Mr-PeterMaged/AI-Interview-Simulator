@@ -8,9 +8,9 @@ InterviewAI is a premium AI interview simulator for realistic job-interview prac
 
 - Adaptive HR, technical, behavioral, and mixed interviews
 - English and Arabic-ready interview flows
-- Resume and job-description analysis endpoints
-- Live browser transcription with speech metric estimates
-- Optional camera preview and privacy-aware body-language abstraction
+- PDF, DOCX, and plain-text resume upload with automatic on-server text extraction; questions and follow-ups are generated from the candidate's actual experience
+- Live browser transcription with speech metric estimates, with a one-click switch to typed answers if the microphone isn't available
+- On-device camera analysis (face-api.js, runs entirely in the browser) for eye contact, posture, head stability, and facial-expression estimates — no camera frames are ever uploaded
 - AI-generated answer evaluations and final reports
 - Authenticated dashboard, interview history, reports, practice mode, question bank, resume analyzer, and settings
 
@@ -21,6 +21,8 @@ InterviewAI is a premium AI interview simulator for realistic job-interview prac
 - Clerk authentication (hosted sign-in, session-protected dashboard routes)
 - **Database:** PostgreSQL, hosted on [Neon](https://neon.tech), accessed through Prisma ORM (`DATABASE_URL`, pooled/serverless-safe connection)
 - **AI:** [Google Gemini API](https://ai.google.dev/) (`gemini-3.6-flash` by default) — used server-side to generate adaptive interview questions, evaluate answers, and produce final performance reports. Configured via `GEMINI_API_KEY` / `GEMINI_MODEL`
+- **Resume parsing:** [unpdf](https://github.com/unjs/unpdf) (PDF) and [mammoth](https://github.com/mwilliamson/mammoth.js) (DOCX), run server-side in `/api/upload`
+- **Computer vision:** [@vladmandic/face-api](https://github.com/vladmandic/face-api) (TensorFlow.js), loaded and run entirely client-side for body-language analysis
 - Zod, React Hook Form, Zustand
 - Framer Motion-ready UI architecture, Lucide React icons, Recharts
 - Deployed on Vercel
@@ -45,7 +47,6 @@ CLERK_SECRET_KEY=
 NEXTAUTH_SECRET=
 NEXTAUTH_URL=
 NEXT_PUBLIC_APP_URL=
-NEXT_PUBLIC_ENABLE_BODY_ANALYSIS=
 NEXT_PUBLIC_ENABLE_SPEECH_RECOGNITION=
 ```
 
@@ -94,7 +95,7 @@ No custom Express server is used. All backend work runs through App Router route
 - Browser speech transcription accuracy is estimated and can contain errors.
 - Camera and body-language metrics are experimental.
 - AI feedback is coaching guidance, not a hiring decision.
-- PDF/DOCX resume extraction is stubbed for MVP; connect Vercel Blob, UploadThing, or Supabase Storage with a parser in production.
+- Legacy `.doc` (pre-2007 Word binary format) is not supported; convert to `.docx` or paste the text manually. PDF and `.docx` are extracted automatically.
 
 ## Developer
 

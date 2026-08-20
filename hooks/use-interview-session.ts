@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { analyzeSpeech } from "@/lib/speech-utils";
 import { targetQuestionsForDuration } from "@/lib/interview-utils";
-import type { InterviewLanguage } from "@/types/interview";
+import type { BodyLanguageSnapshot, InterviewLanguage } from "@/types/interview";
 
 type Question = {
   id: string;
@@ -65,7 +65,15 @@ export function useInterviewSession(interview: {
   }, [currentQuestion, interview]);
 
   const finishAnswer = useCallback(
-    async ({ transcript, durationSeconds }: { transcript: string; durationSeconds: number }) => {
+    async ({
+      transcript,
+      durationSeconds,
+      bodyLanguage
+    }: {
+      transcript: string;
+      durationSeconds: number;
+      bodyLanguage?: BodyLanguageSnapshot;
+    }) => {
       if (!currentQuestion || busy) return;
       setBusy(true);
       setError(null);
@@ -86,7 +94,8 @@ export function useInterviewSession(interview: {
             wordCount: metrics.wordCount,
             wordsPerMinute: metrics.wordsPerMinute,
             fillerWordCount: metrics.fillerWordCount,
-            longPauseCount: metrics.longPauseCount
+            longPauseCount: metrics.longPauseCount,
+            bodyLanguage
           })
         });
         const { answer } = await parseJsonOrThrow(savedAnswerResponse, "Unable to save your answer");

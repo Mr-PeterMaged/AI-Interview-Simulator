@@ -1,11 +1,11 @@
 "use client";
 
+import type { RefObject } from "react";
 import { Camera, CameraOff } from "lucide-react";
-import { useCamera } from "@/hooks/use-camera";
+import type { CameraStatus } from "@/hooks/use-camera";
 import { Badge } from "@/components/ui/badge";
 
-export function CameraPreview({ enabled }: { enabled: boolean }) {
-  const { videoRef, status } = useCamera(enabled);
+export function CameraPreview({ videoRef, status }: { videoRef: RefObject<HTMLVideoElement | null>; status: CameraStatus }) {
   return (
     <div className="overflow-hidden rounded-lg border bg-slate-950">
       <div className="flex items-center justify-between border-b px-4 py-3">
@@ -16,13 +16,14 @@ export function CameraPreview({ enabled }: { enabled: boolean }) {
         <Badge variant={status === "ready" ? "success" : status === "denied" ? "danger" : "outline"}>{status}</Badge>
       </div>
       <div className="aspect-video bg-slate-900">
-        {status === "ready" ? (
-          <video ref={videoRef} autoPlay muted playsInline className="h-full w-full object-cover" />
-        ) : (
+        <video ref={videoRef} autoPlay muted playsInline className={`h-full w-full object-cover ${status === "ready" ? "" : "hidden"}`} />
+        {status !== "ready" ? (
           <div className="grid h-full place-items-center px-5 text-center text-sm text-muted-foreground">
-            Camera preview is optional. Visual analysis stays local where supported.
+            {status === "denied"
+              ? "Camera access was denied. Allow camera access in your browser settings to enable the preview and body-language analysis."
+              : "Camera preview is optional. Visual analysis stays local where supported."}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

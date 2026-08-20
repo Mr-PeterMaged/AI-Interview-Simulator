@@ -33,6 +33,8 @@ export function NewInterviewWizard() {
   const [step, setStep] = useState(1);
   const [analysis, setAnalysis] = useState<{ extractedSkills?: string[]; suggestedTopics?: string[] } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<{ message: string; ok: boolean } | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema) as unknown as Resolver<FormValues>,
@@ -55,11 +57,24 @@ export function NewInterviewWizard() {
 
   async function handleResumeUpload(file?: File) {
     if (!file) return;
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await fetch("/api/upload", { method: "POST", body: formData });
-    const data = await response.json();
-    if (data.resumeText) form.setValue("resumeText", data.resumeText);
+    setUploading(true);
+    setUploadStatus(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await response.json();
+      if (!response.ok) {
+        setUploadStatus({ message: data.error || "Upload failed.", ok: false });
+        return;
+      }
+      if (data.resumeText) form.setValue("resumeText", data.resumeText);
+      setUploadStatus({ message: data.message, ok: Boolean(data.resumeText) });
+    } catch {
+      setUploadStatus({ message: "Upload failed. Paste the resume text manually below.", ok: false });
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function analyzeContext() {
@@ -131,7 +146,11 @@ export function NewInterviewWizard() {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="space-y-3">
                 <Label>Upload CV/resume</Label>
-                <Input type="file" accept=".txt,.pdf,.doc,.docx" onChange={(event) => handleResumeUpload(event.target.files?.[0])} />
+                <Input type="file" accept=".txt,.pdf,.docx" disabled={uploading} onChange={(event) => handleResumeUpload(event.target.files?.[0])} />
+                {uploading ? <p className="text-xs text-muted-foreground">Extracting text…</p> : null}
+                {uploadStatus ? (
+                  <p className={`text-xs ${uploadStatus.ok ? "text-emerald-300" : "text-amber-300"}`}>{uploadStatus.message}</p>
+                ) : null}
                 <Textarea value={form.watch("resumeText") || ""} onChange={(event) => form.setValue("resumeText", event.target.value)} placeholder="Extracted resume text or pasted CV content." />
               </div>
               <div className="space-y-3">

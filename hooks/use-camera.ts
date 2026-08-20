@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+export type CameraStatus = "idle" | "requesting" | "ready" | "denied" | "unsupported";
+
 export function useCamera(enabled: boolean) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [status, setStatus] = useState<"idle" | "requesting" | "ready" | "denied" | "unsupported">("idle");
+  const [status, setStatus] = useState<CameraStatus>("idle");
 
   const stopCamera = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
