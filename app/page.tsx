@@ -182,6 +182,7 @@ export default function LandingPage() {
             Peter Maged
           </a>
         </p>
+        <p className="mt-2 text-xs text-muted-foreground/70">Copyright © 2026 Peter Maged. All rights reserved.</p>
       </footer>
     </div>
   );
