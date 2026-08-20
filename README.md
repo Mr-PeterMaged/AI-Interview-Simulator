@@ -1,5 +1,7 @@
 # InterviewAI — AI Interview Coach & Simulator
 
+**Live demo:** [ai-interview-simulator-ten-navy.vercel.app](https://ai-interview-simulator-ten-navy.vercel.app/)
+
 InterviewAI is a premium AI interview simulator for realistic job-interview practice. It supports role setup, resume and job-description context, adaptive AI questions, microphone transcription, answer evaluation, and detailed professional reports.
 
 ## Features
@@ -16,11 +18,12 @@ InterviewAI is a premium AI interview simulator for realistic job-interview prac
 
 - Next.js 15 App Router, React, TypeScript
 - Tailwind CSS with shadcn/ui-style primitives
-- Clerk authentication
-- Prisma ORM with PostgreSQL
+- Clerk authentication (hosted sign-in, session-protected dashboard routes)
+- **Database:** PostgreSQL, hosted on [Neon](https://neon.tech), accessed through Prisma ORM (`DATABASE_URL`, pooled/serverless-safe connection)
+- **AI:** [Google Gemini API](https://ai.google.dev/) (`gemini-3.6-flash` by default) — used server-side to generate adaptive interview questions, evaluate answers, and produce final performance reports. Configured via `GEMINI_API_KEY` / `GEMINI_MODEL`
 - Zod, React Hook Form, Zustand
 - Framer Motion-ready UI architecture, Lucide React icons, Recharts
-- Server-side AI route handlers powered by the Google Gemini API
+- Deployed on Vercel
 
 ## Local Installation
 
@@ -92,3 +95,15 @@ No custom Express server is used. All backend work runs through App Router route
 - Camera and body-language metrics are experimental.
 - AI feedback is coaching guidance, not a hiring decision.
 - PDF/DOCX resume extraction is stubbed for MVP; connect Vercel Blob, UploadThing, or Supabase Storage with a parser in production.
+
+## Developer
+
+InterviewAI is built and maintained by **Peter Maged** — [petermaged.com](https://petermaged.com).
+
+Peter designed and implemented the full product end to end: the adaptive interview engine, the Gemini-powered question/evaluation/report pipeline, the Clerk-authenticated dashboard, the Prisma/PostgreSQL data layer, and the production deployment on Vercel.
+
+## License
+
+Copyright © 2026 Peter Maged. All rights reserved.
+
+This source code is provided for viewing and evaluation purposes only. No part of this repository may be copied, modified, distributed, or used to create derivative works without prior written permission from the copyright holder. See [LICENSE](./LICENSE) for full terms.
