@@ -1,7 +1,7 @@
 import type { InterviewLanguage, SpeechMetrics } from "@/types/interview";
 
 export const englishFillers = ["um", "uh", "like", "you know", "basically", "actually", "literally", "kind of", "sort of"];
-export const arabicFillers = ["يعني", "امم", "آه", "بص", "طيب", "خليني أقول", "تقريبًا"];
+export const arabicFillers = ["يعني", "امم", "آه", "بص", "يلا", "طيب", "خليني أقول", "تقريبًا"];
 
 export function countWords(transcript: string) {
   const matches = transcript.trim().match(/[\p{L}\p{N}]+/gu);

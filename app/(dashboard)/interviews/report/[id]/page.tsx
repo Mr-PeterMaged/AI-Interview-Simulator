@@ -53,7 +53,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       where: { id },
       include: {
         report: true,
-        answers: { include: { evaluation: true, bodyMetric: true }, orderBy: { createdAt: "asc" } },
+        answers: { include: { evaluation: true, bodyMetric: true, question: true }, orderBy: { createdAt: "asc" } },
         questions: { orderBy: { order: "asc" } }
       }
     });
@@ -70,6 +70,38 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   const averageWpm = pageData.answers.length ? Math.round(pageData.answers.reduce((sum, answer) => sum + answer.wordsPerMinute, 0) / pageData.answers.length) : 0;
   const fillerWords = pageData.answers.reduce((sum, answer) => sum + answer.fillerWordCount, 0);
   const longPauses = pageData.answers.reduce((sum, answer) => sum + answer.longPauseCount, 0);
+  const bodyMetrics = pageData.answers
+    .map((answer) => ("bodyMetric" in answer ? answer.bodyMetric : undefined))
+    .filter((metric): metric is NonNullable<typeof metric> => Boolean(metric));
+  const averageBodyMetric = bodyMetrics.length
+    ? {
+        faceDetectedPercentage: Math.round(bodyMetrics.reduce((sum, metric) => sum + metric.faceDetectedPercentage, 0) / bodyMetrics.length),
+        postureScore: Math.round(bodyMetrics.reduce((sum, metric) => sum + metric.postureScore, 0) / bodyMetrics.length),
+        movementScore: Math.round(bodyMetrics.reduce((sum, metric) => sum + metric.movementScore, 0) / bodyMetrics.length)
+      }
+    : null;
+  const detailedAnswers = isDemo
+    ? []
+    : (
+        pageData.answers as Array<{
+          id: string;
+          transcript: string;
+          question: { questionText: string; generatedReason: string | null };
+          evaluation: {
+            overallScore: number;
+            strengths: string[];
+            weaknesses: string[];
+            suggestions: string[];
+            starAnalysis: {
+              applicable: boolean;
+              situation: { detected: boolean; feedback: string };
+              task: { detected: boolean; feedback: string };
+              action: { detected: boolean; feedback: string };
+              result: { detected: boolean; feedback: string };
+            };
+          } | null;
+        }>
+      ).filter((answer): answer is typeof answer & { evaluation: NonNullable<typeof answer.evaluation> } => Boolean(answer.evaluation));
   const radarData = [
     { skill: "Communication", score: report.communicationScore },
     { skill: "Technical", score: report.technicalKnowledgeScore },
@@ -147,8 +179,17 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
         <Card className="glass">
           <CardHeader><CardTitle>Body language insights</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>Experimental local/browser-based metrics. Camera frames are not uploaded by default.</p>
-            <p>Focus on stable framing, forward posture, and natural eye contact.</p>
+            {averageBodyMetric ? (
+              <>
+                <p>Eye contact <span className="text-white">{averageBodyMetric.faceDetectedPercentage}%</span> · Posture <span className="text-white">{averageBodyMetric.postureScore}%</span> · Movement stability <span className="text-white">{averageBodyMetric.movementScore}%</span></p>
+                <p>On-device estimate averaged across {bodyMetrics.length} answer{bodyMetrics.length === 1 ? "" : "s"}. Camera frames are never uploaded.</p>
+              </>
+            ) : (
+              <>
+                <p>Camera wasn&apos;t on (or no face was detected) during this session, so no body-language data was recorded.</p>
+                <p>Enable the camera next time for eye contact, posture, and expression estimates.</p>
+              </>
+            )}
           </CardContent>
         </Card>
         <Card className="glass">
@@ -169,6 +210,58 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <CardContent className="space-y-2">{practicePlan.map((item) => <div key={item} className="rounded-md border bg-slate-950/50 p-3 text-sm text-slate-200">{item}</div>)}</CardContent>
         </Card>
       </div>
+
+      {detailedAnswers.length ? (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-white">Answer-by-answer breakdown</h2>
+          {detailedAnswers.map((answer, index) => {
+            const evaluation = answer.evaluation;
+            return (
+              <Card key={answer.id} className="glass">
+                <CardHeader>
+                  <div className="flex items-center justify-between gap-3">
+                    <CardTitle className="text-base">Q{index + 1}. {answer.question.questionText}</CardTitle>
+                    <span className="shrink-0 rounded-full bg-slate-800 px-3 py-1 text-xs font-semibold text-cyan-200">{evaluation.overallScore}/100</span>
+                  </div>
+                  {answer.question.generatedReason ? (
+                    <p className="text-xs text-muted-foreground">Why this question: {answer.question.generatedReason}</p>
+                  ) : null}
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                  <p className="rounded-md bg-slate-950/50 p-3 text-muted-foreground">{answer.transcript}</p>
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-300">Strengths</p>
+                      <ul className="space-y-1.5">{evaluation.strengths.map((item) => <li key={item} className="rounded-md bg-emerald-500/10 p-2 text-emerald-100">{item}</li>)}</ul>
+                    </div>
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-rose-300">Weaknesses</p>
+                      <ul className="space-y-1.5">{evaluation.weaknesses.map((item) => <li key={item} className="rounded-md bg-rose-500/10 p-2 text-rose-100">{item}</li>)}</ul>
+                    </div>
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-cyan-300">Suggestions</p>
+                      <ul className="space-y-1.5">{evaluation.suggestions.map((item) => <li key={item} className="rounded-md bg-cyan-500/10 p-2 text-cyan-100">{item}</li>)}</ul>
+                    </div>
+                  </div>
+                  {evaluation.starAnalysis?.applicable ? (
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">STAR check</p>
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        {(["situation", "task", "action", "result"] as const).map((key) => (
+                          <div key={key} className={`rounded-md border p-2 ${evaluation.starAnalysis[key].detected ? "border-emerald-400/30 bg-emerald-500/5" : "border-amber-400/30 bg-amber-500/5"}`}>
+                            <p className="text-xs font-semibold capitalize text-white">{key} {evaluation.starAnalysis[key].detected ? "✓" : "—"}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{evaluation.starAnalysis[key].feedback}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : null}
 
       <div className="no-print flex flex-col gap-3 sm:flex-row">
         <Button asChild><Link href="/interviews/new"><RotateCcw className="h-4 w-4" /> Practice Again</Link></Button>

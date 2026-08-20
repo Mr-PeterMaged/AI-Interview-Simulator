@@ -79,7 +79,8 @@ export function fallbackEvaluation(transcript: string) {
       communication: base,
       answerStructure: base - 3,
       examplesEvidence: Math.max(45, base - 7),
-      conciseness: words > 160 ? base - 8 : base
+      conciseness: words > 160 ? base - 8 : base,
+      overall: base - 2
     },
     strengths: ["Clear attempt to address the question", "Some relevant context was provided"],
     weaknesses: ["Add more measurable evidence", "Tighten the answer structure"],

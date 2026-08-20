@@ -82,6 +82,14 @@ Generate the next adaptive question. It may be a follow-up if the answer needs p
 }`;
 }
 
+const evaluationRubrics: Record<string, string> = {
+  hr: "This is an HR/behavioral question. Weight communication clarity, maturity, concrete personal examples, and self-awareness most heavily. Technical accuracy is not applicable.",
+  behavioral: "This is a behavioral question. Weight structure (ideally STAR: situation, task, action, result), the concreteness of the example, and evidence of personal impact most heavily.",
+  technical: "This is a technical question. Weight correctness, depth of reasoning, explicit assumptions, tradeoff awareness, and precision of terminology most heavily. Vague or hand-wavy technical claims should lower the score even if delivery is confident.",
+  system_design: "This is a system design question. Weight requirement clarification, scalability and tradeoff reasoning, justification of choices, and ability to defend design decisions most heavily.",
+  mixed: "Weight the criteria that best fit the specific question asked — treat it as HR/behavioral if it asks about experience or situations, and as technical if it asks about implementation, systems, or tools."
+};
+
 export function answerEvaluationPrompt(input: {
   question: string;
   transcript: string;
@@ -89,7 +97,12 @@ export function answerEvaluationPrompt(input: {
   interviewType?: string;
   interviewLanguage?: string;
 }) {
+  const rubricKey = (input.interviewType || "mixed").toLowerCase().replace(/\s+/g, "_");
+  const rubric = evaluationRubrics[rubricKey] || evaluationRubrics.mixed;
+
   return `Evaluate candidate answers fairly and constructively. Do not make unsupported claims. Respect that speech-to-text can contain errors.
+
+Rubric guidance: ${rubric}
 
 Role: ${input.jobTitle || "Target role"}
 Interview type: ${input.interviewType || "Mixed"}
