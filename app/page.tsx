@@ -170,7 +170,18 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t px-6 py-8 text-center text-sm text-muted-foreground">
-        InterviewAI — privacy-aware AI interview practice for modern candidates.
+        <p>InterviewAI — privacy-aware AI interview practice for modern candidates.</p>
+        <p className="mt-2">
+          Developed by{" "}
+          <a
+            href="https://petermaged.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-cyan-300 hover:text-cyan-200"
+          >
+            Peter Maged
+          </a>
+        </p>
       </footer>
     </div>
   );

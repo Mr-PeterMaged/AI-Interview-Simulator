@@ -20,7 +20,7 @@ InterviewAI is a premium AI interview simulator for realistic job-interview prac
 - Prisma ORM with PostgreSQL
 - Zod, React Hook Form, Zustand
 - Framer Motion-ready UI architecture, Lucide React icons, Recharts
-- Server-side AI route handlers
+- Server-side AI route handlers powered by the Google Gemini API
 
 ## Local Installation
 
@@ -35,8 +35,8 @@ Fill in `.env` with your own values. For local demo mode, the app falls back to 
 
 ```bash
 DATABASE_URL=
-AI_API_KEY=
-AI_MODEL=
+GEMINI_API_KEY=
+GEMINI_MODEL=
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 NEXTAUTH_SECRET=
@@ -46,7 +46,7 @@ NEXT_PUBLIC_ENABLE_BODY_ANALYSIS=
 NEXT_PUBLIC_ENABLE_SPEECH_RECOGNITION=
 ```
 
-`AI_API_KEY` is only read on the server. If it is missing, API routes return realistic demo/fallback responses.
+`GEMINI_API_KEY` is only read on the server (get one at [Google AI Studio](https://aistudio.google.com/apikey)). `GEMINI_MODEL` defaults to `gemini-2.5-flash`. If the key is missing, API routes return realistic demo/fallback responses.
 
 ## Prisma Setup
 

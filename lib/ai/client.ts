@@ -11,29 +11,36 @@ function extractJson(text: string) {
 }
 
 async function callAi(prompt: string) {
-  const apiKey = process.env.AI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: process.env.AI_MODEL || "gpt-4o-mini",
-      response_format: { type: "json_object" },
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.55
-    })
-  });
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey
+      },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.55
+        }
+      })
+    }
+  );
 
   if (!response.ok) {
-    throw new Error(`AI request failed with ${response.status}`);
+    throw new Error(`Gemini request failed with ${response.status}`);
   }
 
-  const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
-  return data.choices?.[0]?.message?.content || null;
+  const data = (await response.json()) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
 }
 
 export async function structuredAi<T>(prompt: string, schema: z.ZodSchema<T>, fallback: T) {
