@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireUserId } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
-    await requireUserId();
+    const userId = await requireUserId();
+    const limit = await checkRateLimit(`upload:${userId}`);
+    if (!limit.allowed) return NextResponse.json({ error: "Too many uploads" }, { status: 429 });
     const formData = await request.formData();
     const file = formData.get("file");
     if (!(file instanceof File)) {

@@ -10,6 +10,15 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     await assertInterviewOwner(id, userId);
     const body = saveAnswerSchema.parse(await request.json());
 
+    const question = await prisma.interviewQuestion.findFirst({
+      where: { id: body.questionId, interviewId: id }
+    });
+    if (!question) {
+      const error = new Error("Question not found on this interview");
+      error.name = "NotFound";
+      throw error;
+    }
+
     const answer = await prisma.interviewAnswer.create({
       data: {
         interviewId: id,

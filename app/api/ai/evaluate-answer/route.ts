@@ -12,7 +12,21 @@ export async function POST(request: Request) {
     const limit = await checkRateLimit(`evaluate:${userId}`);
     if (!limit.allowed) return NextResponse.json({ error: "Too many AI requests" }, { status: 429 });
     const body = evaluateAnswerInputSchema.parse(await request.json());
-    if (body.interviewId) await assertInterviewOwner(body.interviewId, userId);
+
+    if (body.answerId) {
+      const answer = await prisma.interviewAnswer.findUnique({
+        where: { id: body.answerId },
+        select: { interviewId: true }
+      });
+      if (!answer) {
+        const error = new Error("Answer not found");
+        error.name = "NotFound";
+        throw error;
+      }
+      await assertInterviewOwner(answer.interviewId, userId);
+    } else if (body.interviewId) {
+      await assertInterviewOwner(body.interviewId, userId);
+    }
 
     const result = await structuredAi(
       answerEvaluationPrompt(body),

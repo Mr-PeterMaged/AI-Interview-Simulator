@@ -12,6 +12,7 @@ import { InterviewTimer } from "@/components/interview/interview-timer";
 import { LiveTranscript } from "@/components/interview/live-transcript";
 import { SpeechMetricPanel } from "@/components/interview/speech-metric-panel";
 import { AnswerFeedbackCard } from "@/components/interview/answer-feedback-card";
+import { ErrorState } from "@/components/shared/error-state";
 import { useInterviewSession } from "@/hooks/use-interview-session";
 import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { useBodyLanguage } from "@/hooks/use-body-language";
@@ -105,6 +106,8 @@ export function InterviewRoomClient({ interview }: InterviewRoomProps) {
           <InterviewTimer minutes={interview.durationMinutes} />
         </div>
       </div>
+
+      {session.error ? <ErrorState title="Something went wrong" message={session.error} /> : null}
 
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.25fr_0.95fr]">
         <aside className="space-y-4">
