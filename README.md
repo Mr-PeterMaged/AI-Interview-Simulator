@@ -46,7 +46,7 @@ NEXT_PUBLIC_ENABLE_BODY_ANALYSIS=
 NEXT_PUBLIC_ENABLE_SPEECH_RECOGNITION=
 ```
 
-`GEMINI_API_KEY` is only read on the server (get one at [Google AI Studio](https://aistudio.google.com/apikey)). `GEMINI_MODEL` defaults to `gemini-2.5-flash`. If the key is missing, API routes return realistic demo/fallback responses.
+`GEMINI_API_KEY` is only read on the server (get one at [Google AI Studio](https://aistudio.google.com/apikey)). `GEMINI_MODEL` defaults to `gemini-3.6-flash`. If the key is missing, API routes return realistic demo/fallback responses.
 
 ## Prisma Setup
 
