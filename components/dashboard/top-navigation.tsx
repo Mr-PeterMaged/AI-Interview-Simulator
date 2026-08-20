@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Menu, ShieldCheck } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 
 export function TopNavigation() {
@@ -20,6 +21,7 @@ export function TopNavigation() {
         <Button asChild size="sm">
           <Link href="/interviews/new">Start</Link>
         </Button>
+        {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? <UserButton /> : null}
       </div>
     </header>
   );
